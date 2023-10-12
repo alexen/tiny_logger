@@ -30,7 +30,7 @@ LoggerRecord::LoggerRecord( std::ostream& os, const Level level )
      : os_{ os }
 {
      os_ << boost::posix_time::microsec_clock::local_time()
-          << ' ' << '<' << level << ':' << ' ';
+          << ' ' << level << ':' << ' ';
 }
 
 
