@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <iosfwd>
 
 
@@ -57,6 +58,11 @@ public:
      LoggerRecord info()  { return operator()( Info ); }
      LoggerRecord warn()  { return operator()( Warn ); }
      LoggerRecord error() { return operator()( Error ); }
+
+     std::uintmax_t totalRecords() const noexcept { return totalRecords_ ; }
+
+private:
+     std::uintmax_t totalRecords_ = 0;
 };
 
 

@@ -44,6 +44,7 @@ LoggerRecord::~LoggerRecord()
 
 LoggerRecord Logger::operator()( const Level level )
 {
+     ++totalRecords_;
      return LoggerRecord{ std::cerr, level };
 }
 
