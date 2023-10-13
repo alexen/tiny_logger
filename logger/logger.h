@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <iosfwd>
 
+#include <boost/iostreams/filtering_stream.hpp>
+
 
 namespace alexen {
 namespace tiny_logger {
@@ -63,6 +65,8 @@ public:
 
 private:
      std::uintmax_t totalRecords_ = 0;
+
+     boost::iostreams::filtering_ostream olog_;
 };
 
 
