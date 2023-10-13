@@ -11,7 +11,10 @@
 #include <iomanip>
 #include <iostream>
 
+#include <boost/make_shared.hpp>
 #include <boost/utility/string_view.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 
@@ -51,6 +54,12 @@ inline std::ostream& operator<<( std::ostream& os, const Timestamp_& )
 }
 
 
+void createDirectories( const boost::filesystem::path& dir )
+{
+     boost::filesystem::create_directories( dir );
+}
+
+
 } // namespace impl
 
 
@@ -84,6 +93,15 @@ LoggerRecord::LoggerRecord( std::ostream& os, const Level level )
 LoggerRecord::~LoggerRecord()
 {
      os_ << std::endl;
+}
+
+
+Logger::Logger( const boost::filesystem::path& logDir, OstreamPtr console )
+     : logDir_{ logDir }
+{
+     impl::createDirectories( logDir_ );
+     file_ = boost::make_shared< boost::filesystem::ofstream >( logDir / "logname.log" );
+     olog_.push( *file_ );
 }
 
 

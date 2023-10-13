@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <iosfwd>
 
+#include <boost/filesystem/path.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
 
@@ -50,8 +51,13 @@ private:
 };
 
 
+using OstreamPtr = boost::shared_ptr< std::ostream >;
+
+
 class Logger {
 public:
+     explicit Logger( const boost::filesystem::path& logDir, OstreamPtr console = nullptr );
+
      /// Основной метод вывода в лог с указанием уровня логгирования
      LoggerRecord operator()( const Level );
 
@@ -64,7 +70,11 @@ public:
      std::uintmax_t totalRecords() const noexcept { return totalRecords_ ; }
 
 private:
+     const boost::filesystem::path logDir_;
      std::uintmax_t totalRecords_ = 0;
+
+     OstreamPtr file_;
+     OstreamPtr console_;
 
      boost::iostreams::filtering_ostream olog_;
 };

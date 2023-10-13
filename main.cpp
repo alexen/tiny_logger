@@ -34,7 +34,7 @@ int main( int argc, char** argv )
      boost::ignore_unused( argc, argv );
      try
      {
-          alexen::tiny_logger::Logger logger;
+          alexen::tiny_logger::Logger logger{ "./logs" };
 
           static_assert( alexen::tiny_logger::inner::filename( __FILE__ )
                == std::string_view{ "main.cpp" } );

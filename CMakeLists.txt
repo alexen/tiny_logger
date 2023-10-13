@@ -8,6 +8,11 @@ project(tiny_logger
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+find_package(Boost REQUIRED
+     COMPONENTS
+          filesystem
+)
+
 add_subdirectory("logger")
 
 add_executable(${PROJECT_NAME} main.cpp)
