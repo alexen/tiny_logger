@@ -15,7 +15,7 @@
 #include <boost/utility/string_view.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/iostreams/tee.hpp>
 
 
 namespace alexen {
@@ -51,12 +51,6 @@ inline std::ostream& operator<<( std::ostream& os, const Timestamp_& )
           , tm_.tm_sec
           );
      return os.write( buffer, timestampFormatLen );
-}
-
-
-void createDirectories( const boost::filesystem::path& dir )
-{
-     boost::filesystem::create_directories( dir );
 }
 
 
@@ -99,9 +93,51 @@ LoggerRecord::~LoggerRecord()
 Logger::Logger( const boost::filesystem::path& logDir, OstreamPtr console )
      : logDir_{ logDir }
 {
-     impl::createDirectories( logDir_ );
-     file_ = boost::make_shared< boost::filesystem::ofstream >( logDir / "logname.log" );
-     olog_.push( *file_ );
+     createDirectories();
+
+     /// Как это ни странно, порядок вызова имеет значение.
+     /// Сначала нужно установить фильтр, дублирующий поток,
+     /// а затем - целевой поток.
+     if( console )
+     {
+          addDuplicatedStream( console );
+     }
+     addDestinationStream( makeDestinationStream( buildLogPath() ) );
+     BOOST_ASSERT( !storage_.empty() );
+}
+
+
+void Logger::createDirectories()
+{
+     boost::filesystem::create_directories( logDir_ );
+}
+
+
+void Logger::addDuplicatedStream( OstreamPtr ostr )
+{
+     BOOST_ASSERT( !!ostr );
+     olog_.push( boost::iostreams::tee_filter< std::ostream >{ *ostr } );
+     storage_.push_back( std::move( ostr ) );
+}
+
+
+void Logger::addDestinationStream( OstreamPtr ostr )
+{
+     BOOST_ASSERT( !!ostr );
+     olog_.push( *ostr );
+     storage_.push_back( std::move( ostr ) );
+}
+
+
+boost::filesystem::path Logger::buildLogPath() const
+{
+     return logDir_ / "logname.log";
+}
+
+
+OstreamPtr Logger::makeDestinationStream( const boost::filesystem::path& log )
+{
+     return boost::make_shared< boost::filesystem::ofstream >( log );
 }
 
 

@@ -4,10 +4,15 @@
 
 #pragma once
 
-#include <cstdint>
+#include <list>
 #include <iosfwd>
+#include <cstdint>
+#include <iostream>
 
+#include <boost/shared_ptr.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/core/addressof.hpp>
+#include <boost/core/null_deleter.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
 
@@ -54,9 +59,24 @@ private:
 using OstreamPtr = boost::shared_ptr< std::ostream >;
 
 
+/// Удобная ф-ция для того чтобы превращать потоки,
+/// переданные по ссылке, в boost::shared_ptr
+///
+/// @attention Исходный поток, передаваемый по ссылке,
+/// должен жить все время существования формируемого указателя!
+///
+inline OstreamPtr makeOstreamPtr( std::ostream& os )
+{
+     return boost::shared_ptr< std::ostream >{ boost::addressof( os ), boost::null_deleter{} };
+}
+
+
 class Logger {
 public:
-     explicit Logger( const boost::filesystem::path& logDir, OstreamPtr console = nullptr );
+     explicit Logger(
+          const boost::filesystem::path& logDir
+          , OstreamPtr console = makeOstreamPtr( std::cerr )
+     );
 
      /// Основной метод вывода в лог с указанием уровня логгирования
      LoggerRecord operator()( const Level );
@@ -67,15 +87,24 @@ public:
      LoggerRecord warn()  { return operator()( Warn ); }
      LoggerRecord error() { return operator()( Error ); }
 
-     std::uintmax_t totalRecords() const noexcept { return totalRecords_ ; }
+     /// Возвращает кол-во @a LogRecord, сделанных за время жизни @a Logger
+     std::uintmax_t totalRecords() const noexcept { return totalRecords_; }
 
 private:
+     void createDirectories();
+     void addDuplicatedStream( OstreamPtr );
+     void addDestinationStream( OstreamPtr );
+     boost::filesystem::path buildLogPath() const;
+     OstreamPtr makeDestinationStream( const boost::filesystem::path& log );
+
      const boost::filesystem::path logDir_;
      std::uintmax_t totalRecords_ = 0;
 
-     OstreamPtr file_;
-     OstreamPtr console_;
-
+     /// Хранилище нужно только для того, чтобы не допустить разрушения указателей
+     /// и вызова деструкторов потоков. Используем std::list<> потому, что нам нужно
+     /// только добавлять указатель в коллекцию и не нужно производить с этой коллекцией
+     /// никаких операций.
+     std::list< OstreamPtr > storage_;
      boost::iostreams::filtering_ostream olog_;
 };
 
