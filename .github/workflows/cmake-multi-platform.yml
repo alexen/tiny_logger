@@ -1,0 +1,32 @@
+name: Configure, build & test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches: 
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build-type: [Debug, Release]
+        build-shared-libs: [On, Off]
+
+    steps:
+    - name: Checkout repo with submodules
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    
+    - name: Install requirements
+      run: xargs sudo apt-get install --yes < requirements.txt
+
+    - name: Configure
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -DBUILD_SHARED_LIBS=${{matrix.build-shared-libs}}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build-type}} --parallel $(nproc)
