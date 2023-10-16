@@ -77,7 +77,19 @@ void testLogger( char** argv )
           << std::chrono::duration_cast< std::chrono::microseconds >( duration ).count() << " us)\n";
 }
 
-
+/// @todo Метод Rotator::getCurrentLogFile должен обрабатывать только те файлы, которые изменены сегодня.
+///       Т.е. в поиск последнего актуального лог-файла должны попадать файлы с сегодняшней датой:
+///       Если есть:
+///            2023-10-16_app_name_XXXXXXXXX.log
+///            2023-10-16_app_name_YYYYYYYYY.log
+///            2023-10-16_app_name_ZZZZZZZZZ.log
+///            2023-10-17_app_name_MMMMMMMMM.log
+///            2023-10-19_app_name_NNNNNNNNN.log
+///       а сегодня 2023-10-20 число, то должен быть создан **новый файл** несмотря на то, что есть
+///       файл 2023-10-19_app_name_NNNNNNNNN.log и в нем еще есть место!
+///
+/// @todo А вот при ротации должны использоваться все файлы. Подумать над тем, чтобы сделать общую ф-цию выгрузки файлов.
+///
 int main( int argc, char** argv )
 {
      boost::ignore_unused( argc, argv );
