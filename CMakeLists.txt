@@ -10,8 +10,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(Boost REQUIRED
      COMPONENTS
+          regex
           filesystem
+          unit_test_framework
 )
+
+include(CTest)
 
 add_subdirectory("logger")
 
