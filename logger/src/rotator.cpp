@@ -7,6 +7,7 @@
 #include <time.h>
 #include <stdio.h>
 
+#include <iomanip>
 #include <sstream>
 
 #include <boost/utility/string_view.hpp>
@@ -50,7 +51,7 @@ boost::filesystem::path Rotator::generateNextLogName() const
           << sep
           << appName_
           << sep
-          << tmspec.tv_nsec
+          << std::setw( 9 ) << std::setfill( '0' ) << tmspec.tv_nsec
           << suffix;
 
      return logDir_ / oss.str();

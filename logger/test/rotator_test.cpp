@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE( TestGeneratedFileNameUniqueness )
      Rotator rotator{ "", "" };
      std::set< boost::filesystem::path > names;
 
-     const auto total = 300u;
+     const auto total = 800u;
      for( auto i = 0; i < total; ++i )
      {
           BOOST_REQUIRE_NO_THROW( names.insert( rotator.generateNextLogName() ) );

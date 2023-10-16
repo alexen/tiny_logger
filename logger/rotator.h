@@ -22,7 +22,7 @@ inline std::string makeAppName( const char* const* argv )
 
 class Rotator {
 public:
-     static constexpr auto logNamePattern = R"regex(\d{4}-\d{2}-\d{2}_.*_\d+.log)regex";
+     static constexpr auto logNamePattern = R"regex(\d{4}-\d{2}-\d{2}_.*_\d{9}.log)regex";
 
      explicit Rotator( const std::string& appName, const boost::filesystem::path& logDir );
 
