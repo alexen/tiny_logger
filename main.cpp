@@ -77,39 +77,6 @@ void testLogger( char** argv )
           << std::chrono::duration_cast< std::chrono::microseconds >( duration ).count() << " us)\n";
 }
 
-struct LastWriteTimeGreater
-{
-     bool operator()( const boost::filesystem::path& lhs, const boost::filesystem::path& rhs ) const
-     {
-          return boost::filesystem::last_write_time( lhs ) > boost::filesystem::last_write_time( rhs );
-     }
-};
-using FilePathSet = std::multiset< boost::filesystem::path, LastWriteTimeGreater >;
-
-
-
-boost::filesystem::path getCurrentLogFile( const boost::filesystem::path& logDir, std::size_t maxLogSize = 1941715 )
-{
-     boost::regex re{ alexen::tiny_logger::Rotator::logNamePattern };
-
-     FilePathSet logFiles;
-     std::copy_if( boost::filesystem::directory_iterator{ logDir }, {}
-          , std::inserter( logFiles, logFiles.end() )
-          , [ &re ]( const boost::filesystem::directory_entry& entry ){
-               return boost::regex_match( entry.path().filename().string(), re )
-                    && boost::filesystem::is_regular_file( entry )
-                    && !boost::filesystem::is_symlink( entry );
-          });
-
-     const auto latest = logFiles.begin();
-     if( latest != logFiles.end()
-          && boost::filesystem::file_size( *latest ) < maxLogSize )
-     {
-          return *latest;
-     }
-     return logDir / "brand_new_generated.log";
-}
-
 
 int main( int argc, char** argv )
 {
@@ -118,15 +85,9 @@ int main( int argc, char** argv )
      {
           const auto logDir = "./logs";
 
-//          alexen::tiny_logger::Rotator rotator{ alexen::tiny_logger::makeAppName( argv ), logDir };
-//
-//          for( auto i = 0; i < 12; ++i )
-//          {
-//               boost::filesystem::ofstream{ rotator.generateNextLogName() } << "My number is: " << (i+1) << '\n';
-//               boost::this_thread::sleep( boost::posix_time::milliseconds{ 120 } );
-//          }
+          alexen::tiny_logger::Rotator rotator{ alexen::tiny_logger::makeAppName( argv ), logDir };
 
-          std::cout << getCurrentLogFile( logDir ) << '\n';
+          std::cout << rotator.getCurrentLogFile() << '\n';
      }
      catch( const std::exception& e )
      {

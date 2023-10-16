@@ -7,19 +7,47 @@
 #include <time.h>
 #include <stdio.h>
 
+#include <set>
 #include <iomanip>
 #include <sstream>
 
+#include <boost/regex.hpp>
 #include <boost/utility/string_view.hpp>
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/operations.hpp>
 
 
 namespace alexen {
 namespace tiny_logger {
 
 
-Rotator::Rotator( const std::string& appName, const boost::filesystem::path& logDir )
+namespace {
+namespace impl {
+
+
+struct LastWriteTimeGreater
+{
+     bool operator()( const boost::filesystem::path& lhs, const boost::filesystem::path& rhs ) const
+     {
+          return boost::filesystem::last_write_time( lhs ) > boost::filesystem::last_write_time( rhs );
+     }
+};
+using FilePathSet = std::multiset< boost::filesystem::path, LastWriteTimeGreater >;
+
+
+} // namespace impl
+} // namespace {unnamed}
+
+
+
+Rotator::Rotator(
+     const std::string& appName
+     , const boost::filesystem::path& logDir
+     , const std::size_t maxLogSize
+)
      : appName_{ appName }
      , logDir_{ logDir }
+     , maxLogSize_{ maxLogSize }
 {}
 
 
@@ -55,6 +83,28 @@ boost::filesystem::path Rotator::generateNextLogName() const
           << suffix;
 
      return logDir_ / oss.str();
+}
+
+
+boost::filesystem::path Rotator::getCurrentLogFile() const
+{
+     boost::regex re{ alexen::tiny_logger::Rotator::logNamePattern };
+
+     impl::FilePathSet logFiles;
+     std::copy_if( boost::filesystem::directory_iterator{ logDir_ }, {}
+          , std::inserter( logFiles, logFiles.end() )
+          , [ &re ]( const boost::filesystem::directory_entry& entry ){
+               return boost::regex_match( entry.path().filename().string(), re )
+                    && boost::filesystem::is_regular_file( entry )
+                    && !boost::filesystem::is_symlink( entry );
+          });
+
+     const auto latest = logFiles.begin();
+     if( latest != logFiles.end() && boost::filesystem::file_size( *latest ) < maxLogSize_ )
+     {
+          return *latest;
+     }
+     return generateNextLogName();
 }
 
 
