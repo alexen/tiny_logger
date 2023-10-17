@@ -12,6 +12,7 @@ target_sources(
 target_link_libraries(
      ${THIS}
      PRIVATE
+          Boost::regex
           Boost::filesystem
 )
 
@@ -30,6 +31,7 @@ if(BUILD_TESTING)
           PRIVATE
                ${THIS}
                Boost::regex
+               Boost::filesystem
                Boost::unit_test_framework
      )
      add_test(${THIS} ${THIS_UTEST})

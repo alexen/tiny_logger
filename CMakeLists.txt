@@ -21,9 +21,11 @@ include(CTest)
 add_subdirectory("logger")
 
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(
+     ${PROJECT_NAME}
      PRIVATE
           logger
           Boost::regex
           Boost::thread
+          Boost::filesystem
 )
