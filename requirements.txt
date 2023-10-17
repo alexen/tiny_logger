@@ -1,4 +1,0 @@
-libboost-filesystem-dev
-libboost-thread-dev
-libboost-regex-dev
-libboost-test-dev

@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Tiny logger: Файл logger/logger.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">Tiny logger
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.9.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search",'Поиск','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','Поиск');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_e546037d539dab48998ac54ab76cb525.html">logger</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="summary">
+<a href="#nested-classes">Классы</a> &#124;
+<a href="#typedef-members">Определения типов</a> &#124;
+<a href="#enum-members">Перечисления</a> &#124;
+<a href="#func-members">Функции</a>  </div>
+  <div class="headertitle"><div class="title">Файл logger.h</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><code>#include &lt;iosfwd&gt;</code><br />
+<code>#include &lt;iostream&gt;</code><br />
+<code>#include &lt;boost/shared_ptr.hpp&gt;</code><br />
+<code>#include &lt;boost/core/addressof.hpp&gt;</code><br />
+<code>#include &lt;boost/core/null_deleter.hpp&gt;</code><br />
+<code>#include &lt;boost/filesystem/path.hpp&gt;</code><br />
+<code>#include &lt;boost/filesystem/fstream.hpp&gt;</code><br />
+<code>#include &lt;boost/iostreams/filtering_stream.hpp&gt;</code><br />
+<code>#include &lt;<a class="el" href="rotator_8h_source.html">logger/rotator.h</a>&gt;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Граф включаемых заголовочных файлов для logger.h:</div>
+<div class="dyncontent">
+<div class="center"><img src="logger_8h__incl.png" border="0" usemap="#alogger_2logger_8h" alt=""/></div>
+<map name="alogger_2logger_8h" id="alogger_2logger_8h">
+<area shape="rect" title=" " alt="" coords="582,5,689,32"/>
+<area shape="rect" title=" " alt="" coords="5,87,65,114"/>
+<area shape="rect" title=" " alt="" coords="90,87,162,114"/>
+<area shape="rect" title=" " alt="" coords="187,87,329,114"/>
+<area shape="rect" title=" " alt="" coords="354,87,522,114"/>
+<area shape="rect" title=" " alt="" coords="547,87,724,114"/>
+<area shape="rect" title=" " alt="" coords="921,169,1091,196"/>
+<area shape="rect" title=" " alt="" coords="800,87,988,114"/>
+<area shape="rect" title=" " alt="" coords="1013,80,1173,121"/>
+<area shape="rect" href="rotator_8h.html" title=" " alt="" coords="1197,87,1305,114"/>
+</map>
+</div>
+</div><div class="textblock"><div class="dynheader">
+Граф файлов, в которые включается этот файл:</div>
+<div class="dyncontent">
+<div class="center"><img src="logger_8h__dep__incl.png" border="0" usemap="#alogger_2logger_8hdep" alt=""/></div>
+<map name="alogger_2logger_8hdep" id="alogger_2logger_8hdep">
+<area shape="rect" title=" " alt="" coords="5,5,112,32"/>
+<area shape="rect" href="macro_8h.html" title=" " alt="" coords="5,80,112,107"/>
+</map>
+</div>
+</div>
+<p><a href="logger_8h_source.html">См. исходные тексты.</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Классы</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classalexen_1_1tiny__logger_1_1LoggerRecord.html">alexen::tiny_logger::LoggerRecord</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structalexen_1_1tiny__logger_1_1Counter.html">alexen::tiny_logger::Counter</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Фильтр для подсчета кол-во записанных в поток байт  <a href="structalexen_1_1tiny__logger_1_1Counter.html#details">Подробнее...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classalexen_1_1tiny__logger_1_1Logger.html">alexen::tiny_logger::Logger</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
+Определения типов</h2></td></tr>
+<tr class="memitem:ad1972c659f13782718a241922bb7c88e"><td class="memItemLeft" align="right" valign="top"><a id="ad1972c659f13782718a241922bb7c88e" name="ad1972c659f13782718a241922bb7c88e"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>alexen::tiny_logger::OstreamPtr</b> = boost::shared_ptr&lt; std::ostream &gt;</td></tr>
+<tr class="separator:ad1972c659f13782718a241922bb7c88e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+Перечисления</h2></td></tr>
+<tr class="memitem:aec4cb4747f49b847e8ebcaaf7c097165"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logger_8h.html#aec4cb4747f49b847e8ebcaaf7c097165">alexen::tiny_logger::Level</a> { <b>Debug</b>
+, <b>Info</b>
+, <b>Warn</b>
+, <b>Error</b>
+ }</td></tr>
+<tr class="separator:aec4cb4747f49b847e8ebcaaf7c097165"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Функции</h2></td></tr>
+<tr class="memitem:a1cb844f18013bf389caca06165921eba"><td class="memItemLeft" align="right" valign="top">OstreamPtr&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logger_8h.html#a1cb844f18013bf389caca06165921eba">alexen::tiny_logger::makeOstreamPtr</a> (std::ostream &amp;os)</td></tr>
+<tr class="separator:a1cb844f18013bf389caca06165921eba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Подробное описание</h2>
+<div class="textblock"><dl class="section copyright"><dt>Авторство</dt><dd>Copyright 2023 InfoTeCS Internet Trust </dd></dl>
+</div><h2 class="groupheader">Перечисления</h2>
+<a id="aec4cb4747f49b847e8ebcaaf7c097165" name="aec4cb4747f49b847e8ebcaaf7c097165"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec4cb4747f49b847e8ebcaaf7c097165">&#9670;&nbsp;</a></span>Level</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="logger_8h.html#aec4cb4747f49b847e8ebcaaf7c097165">alexen::tiny_logger::Level</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Не используем enum class чтобы меньше было писать: вместо Level::Info - просто Info.</p>
+<dl class="section note"><dt>Заметки</dt><dd>Не переопределяйте индексы значений, они используются в качестве индексов массива! </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Функции</h2>
+<a id="a1cb844f18013bf389caca06165921eba" name="a1cb844f18013bf389caca06165921eba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1cb844f18013bf389caca06165921eba">&#9670;&nbsp;</a></span>makeOstreamPtr()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">OstreamPtr alexen::tiny_logger::makeOstreamPtr </td>
+          <td>(</td>
+          <td class="paramtype">std::ostream &amp;&#160;</td>
+          <td class="paramname"><em>os</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p >Удобная ф-ция для того чтобы превращать потоки, переданные по ссылке, в boost::shared_ptr</p>
+<dl class="section attention"><dt>Внимание</dt><dd>Исходный поток, передаваемый по ссылке, должен жить все время существования формируемого указателя! </dd></dl>
+<div class="dynheader">
+Граф вызовов:</div>
+<div class="dyncontent">
+<div class="center"><img src="logger_8h_a1cb844f18013bf389caca06165921eba_cgraph.png" border="0" usemap="#alogger_8h_a1cb844f18013bf389caca06165921eba_cgraph" alt=""/></div>
+<map name="alogger_8h_a1cb844f18013bf389caca06165921eba_cgraph" id="alogger_8h_a1cb844f18013bf389caca06165921eba_cgraph">
+<area shape="rect" title=" " alt="" coords="5,29,132,71"/>
+</map>
+</div>
+<div class="dynheader">
+Граф вызова функции:</div>
+<div class="dyncontent">
+<div class="center"><img src="logger_8h_a1cb844f18013bf389caca06165921eba_icgraph.png" border="0" usemap="#alogger_8h_a1cb844f18013bf389caca06165921eba_icgraph" alt=""/></div>
+<map name="alogger_8h_a1cb844f18013bf389caca06165921eba_icgraph" id="alogger_8h_a1cb844f18013bf389caca06165921eba_icgraph">
+<area shape="rect" title=" " alt="" coords="5,29,132,71"/>
+</map>
+</div>
+
+</div>
+</div>
+</div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Создано системой&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.2
+</small></address>
+</body>
+</html>
