@@ -15,6 +15,8 @@
 #include <boost/utility/string_view.hpp>
 #include <boost/filesystem/directory.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/date_time/posix_time/conversion.hpp>
 
 
 namespace alexen {
@@ -33,6 +35,28 @@ struct LastWriteTimeGreater
      }
 };
 using FilePathSet = std::multiset< boost::filesystem::path, LastWriteTimeGreater >;
+
+
+inline bool isRegularFile( const boost::filesystem::directory_entry& entry )
+{
+     /// Исследование показало, что в Linux почему-то символическая ссылка тоже считается
+     /// обычным файлом, так что добавляем явную проверку на символическую ссылку.
+     return boost::filesystem::is_regular_file( entry )
+          && !boost::filesystem::is_symlink( entry );
+}
+
+
+inline bool doesEntryMatchNamePattern( const boost::filesystem::directory_entry& entry, const boost::regex& pattern )
+{
+     return boost::regex_match( entry.path().filename().string(), pattern );
+}
+
+
+inline bool isLastWriteTimeToday( const boost::filesystem::directory_entry& entry )
+{
+     return boost::posix_time::from_time_t( boost::filesystem::last_write_time( entry ) ).date()
+          == boost::gregorian::day_clock::local_day();
+}
 
 
 } // namespace impl
@@ -88,15 +112,15 @@ boost::filesystem::path Rotator::generateNextLogName() const
 
 boost::filesystem::path Rotator::getCurrentLogFile() const
 {
-     boost::regex re{ alexen::tiny_logger::Rotator::logNamePattern };
+     static boost::regex pattern{ alexen::tiny_logger::Rotator::logNamePattern };
 
      impl::FilePathSet logFiles;
      std::copy_if( boost::filesystem::directory_iterator{ logDir_ }, {}
           , std::inserter( logFiles, logFiles.end() )
-          , [ &re ]( const boost::filesystem::directory_entry& entry ){
-               return boost::regex_match( entry.path().filename().string(), re )
-                    && boost::filesystem::is_regular_file( entry )
-                    && !boost::filesystem::is_symlink( entry );
+          , []( const boost::filesystem::directory_entry& entry ){
+               return impl::isRegularFile( entry )
+                    && impl::doesEntryMatchNamePattern( entry, pattern )
+                    && impl::isLastWriteTimeToday( entry );
           });
 
      const auto latest = logFiles.begin();
