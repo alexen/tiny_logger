@@ -52,7 +52,14 @@ int main( int argc, char** argv )
 
           const auto start = std::chrono::steady_clock::now();
 
-          worker( logger, 1'000'000 );
+          const auto fn = boost::bind( worker, boost::ref( logger ), 500'000 );
+
+          boost::thread_group tg;
+          tg.create_thread( fn );
+          tg.create_thread( fn );
+          tg.create_thread( fn );
+          tg.create_thread( fn );
+          tg.join_all();
 
           const auto duration = std::chrono::steady_clock::now() - start;
           std::cout << "Logger: total records made: " << logger.totalRecords()
