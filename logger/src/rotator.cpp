@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include <boost/regex.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/utility/string_view.hpp>
 #include <boost/filesystem/directory.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -46,8 +47,9 @@ inline bool isRegularFile( const boost::filesystem::directory_entry& entry )
 }
 
 
-inline bool doesEntryMatchNamePattern( const boost::filesystem::directory_entry& entry, const boost::regex& pattern )
+inline bool doesMatchNamePattern( const boost::filesystem::directory_entry& entry )
 {
+     static boost::regex pattern{ alexen::tiny_logger::Rotator::logNamePattern };
      return boost::regex_match( entry.path().filename().string(), pattern );
 }
 
@@ -68,11 +70,15 @@ Rotator::Rotator(
      const std::string& appName
      , const boost::filesystem::path& logDir
      , const std::size_t maxLogSize
+     , const unsigned maxLogFiles
 )
      : appName_{ appName }
      , logDir_{ logDir }
      , maxLogSize_{ maxLogSize }
-{}
+     , maxLogFiles_{ maxLogFiles }
+{
+     boost::filesystem::create_directories( logDir_ );
+}
 
 
 boost::filesystem::path Rotator::generateNextLogName() const
@@ -112,23 +118,53 @@ boost::filesystem::path Rotator::generateNextLogName() const
 
 boost::filesystem::path Rotator::getCurrentLogFile() const
 {
-     static boost::regex pattern{ alexen::tiny_logger::Rotator::logNamePattern };
-
      impl::FilePathSet logFiles;
-     std::copy_if( boost::filesystem::directory_iterator{ logDir_ }, {}
+     std::copy_if(
+          boost::filesystem::directory_iterator{ logDir_ }
+          , {}
           , std::inserter( logFiles, logFiles.end() )
-          , []( const boost::filesystem::directory_entry& entry ){
+          ,
+          []( const boost::filesystem::directory_entry& entry )
+          {
                return impl::isRegularFile( entry )
-                    && impl::doesEntryMatchNamePattern( entry, pattern )
+                    && impl::doesMatchNamePattern( entry )
                     && impl::isLastWriteTimeToday( entry );
           });
 
+     /// Используем проверку на пустое множество через итератор вместо std::set::empty() т.к.
+     /// при наличии элементов (а это почти всегда) итератор нам все равно понадобится.
      const auto latest = logFiles.begin();
-     if( latest != logFiles.end() && boost::filesystem::file_size( *latest ) < maxLogSize_ )
+     if( latest != logFiles.end()
+          && boost::filesystem::file_size( *latest ) < maxLogSize_ )
      {
           return *latest;
      }
      return generateNextLogName();
+}
+
+
+void Rotator::rotateLogs()
+{
+     impl::FilePathSet logFiles;
+     std::copy_if(
+          boost::filesystem::directory_iterator{ logDir_ }
+          , {}
+          , std::inserter( logFiles, logFiles.end() )
+          ,
+          []( const boost::filesystem::directory_entry& entry )
+          {
+               return impl::isRegularFile( entry )
+                    && impl::doesMatchNamePattern( entry );
+          });
+
+     if( logFiles.size() > maxLogFiles_ )
+     {
+          std::for_each(
+               std::next( logFiles.begin(), maxLogFiles_ )
+               , logFiles.end()
+               , boost::bind( boost::filesystem::remove, boost::placeholders::_1 )
+               );
+     }
 }
 
 
