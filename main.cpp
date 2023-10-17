@@ -26,12 +26,13 @@
 
 void worker( alexen::tiny_logger::Logger& logger, std::size_t iterations )
 {
-     logger.info() << "Worker started!";
+     logger.info() << "Worker started: iterations: " << iterations;
      try
      {
           while( iterations-- )
           {
-               logger.debug() << "Thread is working: time is " << boost::posix_time::microsec_clock::local_time();
+               logger.debug() << "Thread is working: remain: " << iterations
+                    << ", time is " << boost::posix_time::microsec_clock::local_time();
           }
           BOOST_THROW_EXCEPTION( std::runtime_error{ "Iterations completed" } );
      }
@@ -52,7 +53,7 @@ int main( int argc, char** argv )
 
           const auto start = std::chrono::steady_clock::now();
 
-          const auto fn = boost::bind( worker, boost::ref( logger ), 500'000 );
+          const auto fn = boost::bind( worker, boost::ref( logger ), 50'000 );
 
           boost::thread_group tg;
           tg.create_thread( fn );
@@ -62,10 +63,17 @@ int main( int argc, char** argv )
           tg.join_all();
 
           const auto duration = std::chrono::steady_clock::now() - start;
+
+          const auto secs = std::chrono::duration_cast< std::chrono::duration< double > >( duration ).count();
+          const auto msec = std::chrono::duration_cast< std::chrono::milliseconds >( duration ).count();
+          const auto usec = std::chrono::duration_cast< std::chrono::microseconds >( duration ).count();
+
           std::cout << "Logger: total records made: " << logger.totalRecords()
-               << " for " << std::chrono::duration_cast< std::chrono::duration< double > >( duration ).count() << " s ("
-               << std::chrono::duration_cast< std::chrono::milliseconds >( duration ).count() << " ms, "
-               << std::chrono::duration_cast< std::chrono::microseconds >( duration ).count() << " us)\n";
+               << " for " << secs << " s (" << msec << " ms, " << usec << " us)\n";
+          std::cout << "Records per sec: " << (logger.totalRecords() / secs)
+               << ", per ms: " << (logger.totalRecords() / msec)
+               << ", per us: " << (logger.totalRecords() / usec)
+               << '\n';
 
      }
      catch( const std::exception& e )
