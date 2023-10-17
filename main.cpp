@@ -26,21 +26,12 @@
 
 void worker( alexen::tiny_logger::Logger& logger, std::size_t iterations )
 {
-     logger.info() << "Worker started: iterations: " << iterations;
-     try
+     while( iterations-- )
      {
-          while( iterations-- )
-          {
-               logger.debug() << "Thread is working: remain: " << iterations
-                    << ", time is " << boost::posix_time::microsec_clock::local_time();
-          }
-          BOOST_THROW_EXCEPTION( std::runtime_error{ "Iterations completed" } );
+          logger.debug() << "Thread is working: remain: " << iterations
+               << ", time is " << boost::posix_time::microsec_clock::local_time();
+          boost::this_thread::sleep( boost::posix_time::microseconds{ 15 } );
      }
-     catch( const std::exception& e )
-     {
-          logger.error() << "Exception: " << boost::diagnostic_information( e );
-     }
-     logger.info() << "Worker finished!";
 }
 
 
@@ -53,7 +44,7 @@ int main( int argc, char** argv )
 
           const auto start = std::chrono::steady_clock::now();
 
-          const auto fn = boost::bind( worker, boost::ref( logger ), 50'000 );
+          const auto fn = boost::bind( worker, boost::ref( logger ), 150'000 );
 
           boost::thread_group tg;
           tg.create_thread( fn );
