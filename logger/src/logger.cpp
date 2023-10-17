@@ -81,8 +81,9 @@ inline std::ostream& operator<<( std::ostream& os, const Level level )
 
 
 /// Даже **не** сохраняем значение @a level для экономии памяти!
-LoggerRecord::LoggerRecord( std::ostream& os, const Level level )
-     : os_{ os }
+LoggerRecord::LoggerRecord( boost::mutex& m, std::ostream& os, const Level level )
+     : lock_{ m }
+     , os_{ os }
 {
      static constexpr boost::string_view tail = ": ";
      os_ << impl::timestamp << ' ' << impl::threadId << ' ' << level << tail;
@@ -139,7 +140,7 @@ void Logger::startLoggingInto( const boost::filesystem::path& path )
 LoggerRecord Logger::operator()( const Level level )
 {
      ++totalRecords_;
-     return LoggerRecord{ olog_, level };
+     return LoggerRecord{ mutex_, olog_, level };
 }
 
 

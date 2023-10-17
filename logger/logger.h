@@ -13,6 +13,8 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
 
 #include <logger/rotator.h>
 
@@ -41,7 +43,7 @@ enum Level {
 ///
 class LoggerRecord {
 public:
-     explicit LoggerRecord( std::ostream& os, const Level level );
+     LoggerRecord( boost::mutex& m, std::ostream& os, const Level level );
      ~LoggerRecord();
 
      /// Используем шаблон чтобы по полной использовать
@@ -53,6 +55,7 @@ public:
           return *this;
      }
 private:
+     boost::lock_guard< boost::mutex > lock_;
      std::ostream& os_;
 };
 
@@ -127,6 +130,8 @@ private:
      boost::filesystem::ofstream ofile_;
      Counter counter_;
      boost::iostreams::filtering_ostream olog_;
+
+     boost::mutex mutex_;
 };
 
 
