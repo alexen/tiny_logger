@@ -4,16 +4,17 @@
 
 #pragma once
 
-#include <list>
 #include <iosfwd>
-#include <cstdint>
 #include <iostream>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/core/addressof.hpp>
 #include <boost/core/null_deleter.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+
+#include <logger/rotator.h>
 
 
 namespace alexen {
@@ -71,10 +72,31 @@ inline OstreamPtr makeOstreamPtr( std::ostream& os )
 }
 
 
+/// Фильтр для подсчета кол-во записанных в поток байт
+struct Counter : boost::iostreams::multichar_output_filter {
+     explicit Counter( std::size_t init = 0u ) : chars_{ init } {}
+
+     template< typename Sink >
+     std::streamsize write( Sink& sink, const char_type* s, std::streamsize n )
+     {
+          const auto result = boost::iostreams::write( sink, s, n );
+          chars_ += result > 0 ? result : 0;
+          return result;
+     }
+
+     std::size_t chars() const noexcept { return chars_; }
+     void reset( std::size_t init = 0u ) noexcept { chars_ = init; }
+
+private:
+     std::size_t chars_ = 0;
+};
+
+
 class Logger {
 public:
-     explicit Logger(
-          const boost::filesystem::path& logDir
+     Logger(
+          const std::string& appName
+          , const boost::filesystem::path& logDir
           , OstreamPtr console = makeOstreamPtr( std::cerr )
      );
 
@@ -91,20 +113,19 @@ public:
      std::uintmax_t totalRecords() const noexcept { return totalRecords_; }
 
 private:
-     void createDirectories();
-     void addDuplicatedStream( OstreamPtr );
-     void addDestinationStream( OstreamPtr );
-     boost::filesystem::path buildLogPath() const;
-     OstreamPtr makeDestinationStream( const boost::filesystem::path& log );
+     void prepareLogDirectory();
+     void setFilteringStreams();
+     void startLoggingInto( const boost::filesystem::path& path );
 
-     const boost::filesystem::path logDir_;
+     Rotator rotator_;
+
      std::uintmax_t totalRecords_ = 0;
 
-     /// Хранилище нужно только для того, чтобы не допустить разрушения указателей
-     /// и вызова деструкторов потоков. Используем std::list<> потому, что нам нужно
-     /// только добавлять указатель в коллекцию и не нужно производить с этой коллекцией
-     /// никаких операций.
-     std::list< OstreamPtr > storage_;
+     /// Опциональный указатель на дополнительный (дублирующий) выходной поток.
+     /// Предполагается, что это будет std::cerr, но использовать можно любой std::ostream.
+     OstreamPtr console_;
+     boost::filesystem::ofstream ofile_;
+     Counter counter_;
      boost::iostreams::filtering_ostream olog_;
 };
 
