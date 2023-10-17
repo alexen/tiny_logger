@@ -90,59 +90,53 @@ LoggerRecord::~LoggerRecord()
 }
 
 
-Logger::Logger( const boost::filesystem::path& logDir, OstreamPtr console )
-     : logDir_{ logDir }
+Logger::Logger(
+     const std::string& appName
+     , const boost::filesystem::path& logDir
+     , OstreamPtr console
+)
+     : rotator_{ appName, logDir }
+     , console_{ console }
 {
-     createDirectories();
+     prepareLogDirectory();
+     setFilteringStreams();
+     startLoggingInto( rotator_.getCurrentLogFile() );
+}
 
-     /// Как это ни странно, порядок вызова имеет значение.
-     /// Сначала нужно установить фильтр, дублирующий поток,
-     /// а затем - целевой поток.
-     if( console )
+
+void Logger::prepareLogDirectory()
+{
+     boost::filesystem::create_directories( rotator_.logDir() );
+}
+
+
+void Logger::setFilteringStreams()
+{
+     if( console_ )
      {
-          addDuplicatedStream( console );
+          olog_.push( boost::iostreams::tee_filter< std::ostream >{ *console_ } );
      }
-     addDestinationStream( makeDestinationStream( buildLogPath() ) );
-     BOOST_ASSERT( !storage_.empty() );
+     olog_.push( boost::ref( counter_ ) );
+     olog_.push( ofile_ );
 }
 
 
-void Logger::createDirectories()
+void Logger::startLoggingInto( const boost::filesystem::path& path )
 {
-     boost::filesystem::create_directories( logDir_ );
-}
-
-
-void Logger::addDuplicatedStream( OstreamPtr ostr )
-{
-     BOOST_ASSERT( !!ostr );
-     olog_.push( boost::iostreams::tee_filter< std::ostream >{ *ostr } );
-     storage_.push_back( std::move( ostr ) );
-}
-
-
-void Logger::addDestinationStream( OstreamPtr ostr )
-{
-     BOOST_ASSERT( !!ostr );
-     olog_.push( *ostr );
-     storage_.push_back( std::move( ostr ) );
-}
-
-
-boost::filesystem::path Logger::buildLogPath() const
-{
-     return logDir_ / "logname.log";
-}
-
-
-OstreamPtr Logger::makeDestinationStream( const boost::filesystem::path& log )
-{
-     return boost::make_shared< boost::filesystem::ofstream >( log );
+     ofile_.close();
+     rotator_.rotateLogs();
+     counter_.reset( boost::filesystem::exists( path ) ? boost::filesystem::file_size( path ) : 0u );
+     ofile_.open( path, std::ios_base::out | std::ios_base::app );
 }
 
 
 LoggerRecord Logger::operator()( const Level level )
 {
+     if( counter_.chars() > rotator_.maxLogSize() )
+     {
+          startLoggingInto( rotator_.generateNextLogName() );
+     }
+
      ++totalRecords_;
      return LoggerRecord{ olog_, level };
 }
