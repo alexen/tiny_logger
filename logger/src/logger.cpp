@@ -16,6 +16,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/iostreams/tee.hpp>
+#include <boost/thread/thread.hpp>
 
 
 namespace alexen {
@@ -27,6 +28,7 @@ namespace impl {
 
 
 const struct Timestamp_ {} timestamp;
+const struct ThreadId_ {} threadId;
 
 inline std::ostream& operator<<( std::ostream& os, const Timestamp_& )
 {
@@ -51,6 +53,11 @@ inline std::ostream& operator<<( std::ostream& os, const Timestamp_& )
           , tm_.tm_sec
           );
      return os.write( buffer, timestampFormatLen );
+}
+
+inline std::ostream& operator<<( std::ostream& os, const ThreadId_& )
+{
+     return os << '{' << boost::this_thread::get_id() << '}';
 }
 
 
@@ -78,7 +85,7 @@ LoggerRecord::LoggerRecord( std::ostream& os, const Level level )
      : os_{ os }
 {
      static constexpr boost::string_view tail = ": ";
-     os_ << impl::timestamp << ' ' << level << tail;
+     os_ << impl::timestamp << ' ' << impl::threadId << ' ' << level << tail;
 }
 
 
