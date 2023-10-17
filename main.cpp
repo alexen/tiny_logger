@@ -83,20 +83,7 @@ int main( int argc, char** argv )
      boost::ignore_unused( argc, argv );
      try
      {
-          const auto logDir = "./logs";
-
-          alexen::tiny_logger::Rotator rotator{
-               alexen::tiny_logger::makeAppName( argv )
-               , logDir
-               , alexen::tiny_logger::Rotator::defaultMaxLogSize
-               , 3u
-          };
-
-          const auto logFile = rotator.getCurrentLogFile();
-          std::cout << "Got file: " << logFile << " (is new: "
-               << std::boolalpha << (boost::filesystem::exists( logFile ) ? "no" : "yes") << ")\n";
-
-          rotator.rotateLogs();
+          testLogger( argv );
      }
      catch( const std::exception& e )
      {
