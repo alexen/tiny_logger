@@ -76,9 +76,7 @@ Rotator::Rotator(
      , logDir_{ logDir }
      , maxLogSize_{ maxLogSize }
      , maxLogFiles_{ maxLogFiles }
-{
-     boost::filesystem::create_directories( logDir_ );
-}
+{}
 
 
 boost::filesystem::path Rotator::generateNextLogName() const
