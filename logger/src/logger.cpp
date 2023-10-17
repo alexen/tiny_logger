@@ -124,7 +124,6 @@ void Logger::setFilteringStreams()
 void Logger::startLoggingInto( const boost::filesystem::path& path )
 {
      ofile_.close();
-     rotator_.rotateLogs();
      counter_.reset( boost::filesystem::exists( path ) ? boost::filesystem::file_size( path ) : 0u );
      ofile_.open( path, std::ios_base::out | std::ios_base::app );
 }
@@ -132,11 +131,6 @@ void Logger::startLoggingInto( const boost::filesystem::path& path )
 
 LoggerRecord Logger::operator()( const Level level )
 {
-     if( counter_.chars() > rotator_.maxLogSize() )
-     {
-          startLoggingInto( rotator_.generateNextLogName() );
-     }
-
      ++totalRecords_;
      return LoggerRecord{ olog_, level };
 }
