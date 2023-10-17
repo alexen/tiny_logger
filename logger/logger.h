@@ -15,6 +15,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_guard.hpp>
+#include <boost/atomic.hpp>
 
 #include <logger/rotator.h>
 
@@ -113,7 +114,7 @@ public:
      LoggerRecord error() { return operator()( Error ); }
 
      /// Возвращает кол-во @a LogRecord, сделанных за время жизни @a Logger
-     std::uintmax_t totalRecords() const noexcept { return totalRecords_; }
+     std::uintmax_t totalRecords() const noexcept { return totalRecords_.value(); }
 
 private:
      void prepareLogDirectory();
@@ -122,7 +123,7 @@ private:
 
      Rotator rotator_;
 
-     std::uintmax_t totalRecords_ = 0;
+     boost::atomic< std::uintmax_t > totalRecords_ = { 0 };
 
      /// Опциональный указатель на дополнительный (дублирующий) выходной поток.
      /// Предполагается, что это будет std::cerr, но использовать можно любой std::ostream.
