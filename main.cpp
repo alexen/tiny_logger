@@ -41,7 +41,7 @@ std::ostream& operator<<( std::ostream& os, const FloatArrN7& arr )
 
 void testLogger( char** argv )
 {
-     alexen::tiny_logger::Logger logger{ "./logs" };
+     alexen::tiny_logger::Logger logger{ alexen::tiny_logger::makeAppName( argv ), "./logs", nullptr };
 
      static_assert( alexen::tiny_logger::inner::filename( __FILE__ )
           == std::string_view{ "main.cpp" } );
@@ -57,7 +57,7 @@ void testLogger( char** argv )
           34532.2387462817465
      };
 
-     auto iterations = 50'000u;
+     auto iterations = 150'000u;
 
      const auto start = std::chrono::steady_clock::now();
      while( iterations-- )
