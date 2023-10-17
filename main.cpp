@@ -28,8 +28,9 @@ void worker( alexen::tiny_logger::Logger& logger, std::size_t iterations )
 {
      while( iterations-- )
      {
-          logger.debug() << "Thread is working: remain: " << iterations
-               << ", time is " << boost::posix_time::microsec_clock::local_time();
+          /// Эта запись в лог длиной ровно 100 байт
+          logger.debug() << "Thread is working: time is ~"
+               << boost::posix_time::microsec_clock::local_time();
           boost::this_thread::sleep( boost::posix_time::microseconds{ 15 } );
      }
 }
@@ -44,9 +45,10 @@ int main( int argc, char** argv )
 
           const auto start = std::chrono::steady_clock::now();
 
-          const auto fn = boost::bind( worker, boost::ref( logger ), 150'000 );
+          const auto fn = boost::bind( worker, boost::ref( logger ), 1'000 );
 
           boost::thread_group tg;
+          tg.create_thread( fn );
           tg.create_thread( fn );
           tg.create_thread( fn );
           tg.create_thread( fn );
@@ -61,10 +63,13 @@ int main( int argc, char** argv )
 
           std::cout << "Logger: total records made: " << logger.totalRecords()
                << " for " << secs << " s (" << msec << " ms, " << usec << " us)\n";
-          std::cout << "Records per sec: " << (logger.totalRecords() / secs)
-               << ", per ms: " << (logger.totalRecords() / msec)
-               << ", per us: " << (logger.totalRecords() / usec)
-               << '\n';
+          if( secs && msec && usec )
+          {
+               std::cout << "Records per sec: " << (logger.totalRecords() / secs)
+                    << ", per ms: " << (logger.totalRecords() / msec)
+                    << ", per us: " << (logger.totalRecords() / usec)
+                    << '\n';
+          }
 
      }
      catch( const std::exception& e )
