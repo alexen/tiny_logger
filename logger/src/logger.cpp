@@ -81,8 +81,8 @@ inline std::ostream& operator<<( std::ostream& os, const Level level )
 
 
 /// Даже **не** сохраняем значение @a level для экономии памяти!
-LoggerRecord::LoggerRecord( boost::mutex& m, std::ostream& os, const Level level )
-     : lock_{ m }
+LoggerRecord::LoggerRecord( boost::unique_lock< boost::mutex >&& lock, std::ostream& os, const Level level )
+     : lock_{ std::move( lock ) }
      , os_{ os }
 {
      static constexpr boost::string_view tail = ": ";
@@ -108,7 +108,7 @@ Logger::Logger(
 {
      prepareLogDirectory();
      setFilteringStreams();
-     startLoggingInto( rotator_.getCurrentLogFile() );
+     startLoggingInto( boost::unique_lock< boost::mutex >{ mutex_ }, rotator_.getCurrentLogFile() );
 }
 
 
@@ -129,9 +129,10 @@ void Logger::setFilteringStreams()
 }
 
 
-void Logger::startLoggingInto( const boost::filesystem::path& path )
+void Logger::startLoggingInto( const boost::unique_lock< boost::mutex >&, const boost::filesystem::path& path )
 {
      ofile_.close();
+     rotator_.rotateLogs();
      updateStat();
      counter_.reset( boost::filesystem::exists( path ) ? boost::filesystem::file_size( path ) : 0u );
      ofile_.open( path, std::ios_base::out | std::ios_base::app );
@@ -140,8 +141,13 @@ void Logger::startLoggingInto( const boost::filesystem::path& path )
 
 LoggerRecord Logger::operator()( const Level level )
 {
+     boost::unique_lock< boost::mutex > lock{ mutex_ };
+     if( counter_.chars() > rotator_.maxLogSize() )
+     {
+          startLoggingInto( lock, rotator_.generateNextLogName() );
+     }
      ++totalRecords_;
-     return LoggerRecord{ mutex_, olog_, level };
+     return LoggerRecord{ std::move( lock ), olog_, level };
 }
 
 

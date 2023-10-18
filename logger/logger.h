@@ -44,7 +44,7 @@ enum Level {
 ///
 class LoggerRecord {
 public:
-     LoggerRecord( boost::mutex& m, std::ostream& os, const Level level );
+     LoggerRecord( boost::unique_lock< boost::mutex >&& lock, std::ostream& os, const Level level );
      ~LoggerRecord();
 
      /// Используем шаблон чтобы по полной использовать
@@ -56,7 +56,7 @@ public:
           return *this;
      }
 private:
-     boost::lock_guard< boost::mutex > lock_;
+     boost::unique_lock< boost::mutex > lock_;
      std::ostream& os_;
 };
 
@@ -122,7 +122,7 @@ public:
 private:
      void prepareLogDirectory();
      void setFilteringStreams();
-     void startLoggingInto( const boost::filesystem::path& path );
+     void startLoggingInto( const boost::unique_lock< boost::mutex >&, const boost::filesystem::path& path );
 
      Rotator rotator_;
 
