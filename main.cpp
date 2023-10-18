@@ -24,6 +24,9 @@
 #include <logger/logger.h>
 
 
+#define YES_NO( f ) ((f) ? "yes" : "no")
+
+
 void worker( alexen::tiny_logger::Logger& logger, std::size_t iterations )
 {
      while( iterations-- )
@@ -45,14 +48,15 @@ int main( int argc, char** argv )
 
           const auto start = std::chrono::steady_clock::now();
 
+          const auto iterations = 1'000u;
+          const auto threads = 5u;
           const auto fn = boost::bind( worker, boost::ref( logger ), 1'000 );
 
           boost::thread_group tg;
-          tg.create_thread( fn );
-          tg.create_thread( fn );
-          tg.create_thread( fn );
-          tg.create_thread( fn );
-          tg.create_thread( fn );
+          for( auto i = 0u; i < threads; ++i )
+          {
+               tg.create_thread( fn );
+          }
           tg.join_all();
 
           const auto duration = std::chrono::steady_clock::now() - start;
@@ -61,16 +65,12 @@ int main( int argc, char** argv )
           const auto msec = std::chrono::duration_cast< std::chrono::milliseconds >( duration ).count();
           const auto usec = std::chrono::duration_cast< std::chrono::microseconds >( duration ).count();
 
-          std::cout << "Logger: total records made: " << logger.totalRecords()
-               << " for " << secs << " s (" << msec << " ms, " << usec << " us)\n";
-          if( secs && msec && usec )
-          {
-               std::cout << "Records per sec: " << (logger.totalRecords() / secs)
-                    << ", per ms: " << (logger.totalRecords() / msec)
-                    << ", per us: " << (logger.totalRecords() / usec)
-                    << '\n';
-          }
+          logger.updateStat();
 
+          std::cout
+               << "Logger stat for " << secs << " s (" << msec << " ms, " << usec << " us)\n"
+               << " - records : " << logger.totalRecords() << '\n'
+               << " - bytes   : " << logger.totalChars() << " (correct? " << YES_NO(logger.totalChars() == (threads * iterations * 100)) << ")\n";
      }
      catch( const std::exception& e )
      {
