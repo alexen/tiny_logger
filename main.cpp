@@ -63,18 +63,28 @@ void worker( alexen::tiny_logger::Logger& logger, std::size_t iterations )
 }
 
 
-int main( int argc, char** argv )
+int main( const int argc, char** argv )
 {
      boost::ignore_unused( argc, argv );
      try
      {
           alexen::tiny_logger::Logger logger{ "appname", "./logs", nullptr };
 
-          const auto start = std::chrono::steady_clock::now();
+          std::size_t iterations = 1'000u;
+          std::size_t threads = boost::thread::hardware_concurrency();
 
-          const auto iterations = 1'000u;
-          const auto threads = 5u;
-          const auto fn = boost::bind( worker, boost::ref( logger ), 1'000 );
+          if( argc > 2 )
+          {
+               threads = std::stoi( argv[ 2 ] );
+          }
+          if( argc > 1 )
+          {
+               iterations = std::stoll( argv[ 1 ] );
+          }
+
+          const auto fn = boost::bind( worker, boost::ref( logger ), iterations );
+
+          const auto start = std::chrono::steady_clock::now();
 
           boost::thread_group tg;
           for( auto i = 0u; i < threads; ++i )
@@ -93,8 +103,12 @@ int main( int argc, char** argv )
 
           std::cout
                << "Logger stat for " << secs << " s (" << msec << " ms, " << usec << " us)\n"
-               << " - records : " << logger.totalRecords() << '\n'
-               << " - bytes   : " << logger.totalChars() << " (correct? " << YES_NO(logger.totalChars() == (threads * iterations * 100)) << ")\n";
+               << " - iterations: " << iterations << '\n'
+               << " - threads   : " << threads << '\n'
+               << " - records   : " << logger.totalRecords() << " (" << (secs ? logger.totalRecords() / secs : 0.) << " records/s)" << '\n'
+               << " - bytes     : " << logger.totalChars()
+               << " [" << (logger.totalChars() == (threads * iterations * 100) ? 'v' : 'x') << "] ("
+               << (secs ? logger.totalChars() / secs : 0.) << " bytes/s)\n";
      }
      catch( const std::exception& e )
      {
