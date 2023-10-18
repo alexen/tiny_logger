@@ -13,6 +13,9 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/atomic.hpp>
 
 #include <logger/rotator.h>
 
@@ -41,7 +44,7 @@ enum Level {
 ///
 class LoggerRecord {
 public:
-     explicit LoggerRecord( std::ostream& os, const Level level );
+     LoggerRecord( boost::unique_lock< boost::mutex >&& lock, std::ostream& os, const Level level );
      ~LoggerRecord();
 
      /// Используем шаблон чтобы по полной использовать
@@ -53,6 +56,7 @@ public:
           return *this;
      }
 private:
+     boost::unique_lock< boost::mutex > lock_;
      std::ostream& os_;
 };
 
@@ -109,17 +113,21 @@ public:
      LoggerRecord warn()  { return operator()( Warn ); }
      LoggerRecord error() { return operator()( Error ); }
 
+     void updateStat();
+
      /// Возвращает кол-во @a LogRecord, сделанных за время жизни @a Logger
-     std::uintmax_t totalRecords() const noexcept { return totalRecords_; }
+     std::size_t totalRecords() const noexcept { return totalRecords_.value(); }
+     std::size_t totalChars() const noexcept { return totalChars_.value(); }
 
 private:
      void prepareLogDirectory();
      void setFilteringStreams();
-     void startLoggingInto( const boost::filesystem::path& path );
+     void startLoggingInto( const boost::unique_lock< boost::mutex >&, const boost::filesystem::path& path );
 
      Rotator rotator_;
 
-     std::uintmax_t totalRecords_ = 0;
+     boost::atomic< std::size_t > totalRecords_ = { 0 };
+     boost::atomic< std::size_t > totalChars_ = { 0 };
 
      /// Опциональный указатель на дополнительный (дублирующий) выходной поток.
      /// Предполагается, что это будет std::cerr, но использовать можно любой std::ostream.
@@ -127,6 +135,8 @@ private:
      boost::filesystem::ofstream ofile_;
      Counter counter_;
      boost::iostreams::filtering_ostream olog_;
+
+     boost::mutex mutex_;
 };
 
 

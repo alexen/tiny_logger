@@ -16,6 +16,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/iostreams/tee.hpp>
+#include <boost/thread/thread.hpp>
 
 
 namespace alexen {
@@ -27,6 +28,7 @@ namespace impl {
 
 
 const struct Timestamp_ {} timestamp;
+const struct ThreadId_ {} threadId;
 
 inline std::ostream& operator<<( std::ostream& os, const Timestamp_& )
 {
@@ -53,6 +55,11 @@ inline std::ostream& operator<<( std::ostream& os, const Timestamp_& )
      return os.write( buffer, timestampFormatLen );
 }
 
+inline std::ostream& operator<<( std::ostream& os, const ThreadId_& )
+{
+     return os << '{' << boost::this_thread::get_id() << '}';
+}
+
 
 } // namespace impl
 
@@ -74,11 +81,12 @@ inline std::ostream& operator<<( std::ostream& os, const Level level )
 
 
 /// Даже **не** сохраняем значение @a level для экономии памяти!
-LoggerRecord::LoggerRecord( std::ostream& os, const Level level )
-     : os_{ os }
+LoggerRecord::LoggerRecord( boost::unique_lock< boost::mutex >&& lock, std::ostream& os, const Level level )
+     : lock_{ std::move( lock ) }
+     , os_{ os }
 {
      static constexpr boost::string_view tail = ": ";
-     os_ << impl::timestamp << ' ' << level << tail;
+     os_ << impl::timestamp << ' ' << impl::threadId << ' ' << level << tail;
 }
 
 
@@ -100,7 +108,7 @@ Logger::Logger(
 {
      prepareLogDirectory();
      setFilteringStreams();
-     startLoggingInto( rotator_.getCurrentLogFile() );
+     startLoggingInto( boost::unique_lock< boost::mutex >{ mutex_ }, rotator_.getCurrentLogFile() );
 }
 
 
@@ -121,10 +129,11 @@ void Logger::setFilteringStreams()
 }
 
 
-void Logger::startLoggingInto( const boost::filesystem::path& path )
+void Logger::startLoggingInto( const boost::unique_lock< boost::mutex >&, const boost::filesystem::path& path )
 {
      ofile_.close();
      rotator_.rotateLogs();
+     updateStat();
      counter_.reset( boost::filesystem::exists( path ) ? boost::filesystem::file_size( path ) : 0u );
      ofile_.open( path, std::ios_base::out | std::ios_base::app );
 }
@@ -132,13 +141,19 @@ void Logger::startLoggingInto( const boost::filesystem::path& path )
 
 LoggerRecord Logger::operator()( const Level level )
 {
+     boost::unique_lock< boost::mutex > lock{ mutex_ };
      if( counter_.chars() > rotator_.maxLogSize() )
      {
-          startLoggingInto( rotator_.generateNextLogName() );
+          startLoggingInto( lock, rotator_.generateNextLogName() );
      }
-
      ++totalRecords_;
-     return LoggerRecord{ olog_, level };
+     return LoggerRecord{ std::move( lock ), olog_, level };
+}
+
+
+void Logger::updateStat()
+{
+     totalChars_ += counter_.chars();
 }
 
 
