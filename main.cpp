@@ -27,14 +27,38 @@
 #define YES_NO( f ) ((f) ? "yes" : "no")
 
 
+struct RandomChars {
+     explicit RandomChars( std::size_t n ) : n{ n } {}
+     const std::size_t n = 0u;
+     std::ostream& generate( std::ostream& os ) const
+     {
+          static constexpr boost::string_view chars =
+               "qwertyuiopfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
+          std::ifstream ifile{ "/dev/urandom", std::ios_base::in | std::ios_base::binary };
+
+          std::generate_n(
+               std::ostreambuf_iterator< char >{ os }, n,
+               [ &ifile ]{ return chars[ ifile.get() % chars.size() ]; }
+               );
+
+          return os;
+     }
+};
+
+
+std::ostream& operator<<( std::ostream& os, const RandomChars& rc )
+{
+     return rc.generate( os );
+}
+
+
 void worker( alexen::tiny_logger::Logger& logger, std::size_t iterations )
 {
      while( iterations-- )
      {
-          /// Эта запись в лог длиной ровно 100 байт
-          logger.debug() << "Thread is working: time is ~"
-               << boost::posix_time::microsec_clock::local_time();
-          boost::this_thread::sleep( boost::posix_time::microseconds{ 15 } );
+          /// Эта запись в лог длиной ровно 100 байт:
+          /// префикс (44 символа), 55 случайных символов и перенос строки
+          logger.debug() << RandomChars{ 55 };
      }
 }
 
