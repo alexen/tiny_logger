@@ -113,8 +113,11 @@ public:
      LoggerRecord warn()  { return operator()( Warn ); }
      LoggerRecord error() { return operator()( Error ); }
 
+     void updateStat();
+
      /// Возвращает кол-во @a LogRecord, сделанных за время жизни @a Logger
-     std::uintmax_t totalRecords() const noexcept { return totalRecords_.value(); }
+     std::size_t totalRecords() const noexcept { return totalRecords_.value(); }
+     std::size_t totalChars() const noexcept { return totalChars_.value(); }
 
 private:
      void prepareLogDirectory();
@@ -123,7 +126,8 @@ private:
 
      Rotator rotator_;
 
-     boost::atomic< std::uintmax_t > totalRecords_ = { 0 };
+     boost::atomic< std::size_t > totalRecords_ = { 0 };
+     boost::atomic< std::size_t > totalChars_ = { 0 };
 
      /// Опциональный указатель на дополнительный (дублирующий) выходной поток.
      /// Предполагается, что это будет std::cerr, но использовать можно любой std::ostream.

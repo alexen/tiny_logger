@@ -132,6 +132,7 @@ void Logger::setFilteringStreams()
 void Logger::startLoggingInto( const boost::filesystem::path& path )
 {
      ofile_.close();
+     updateStat();
      counter_.reset( boost::filesystem::exists( path ) ? boost::filesystem::file_size( path ) : 0u );
      ofile_.open( path, std::ios_base::out | std::ios_base::app );
 }
@@ -141,6 +142,12 @@ LoggerRecord Logger::operator()( const Level level )
 {
      ++totalRecords_;
      return LoggerRecord{ mutex_, olog_, level };
+}
+
+
+void Logger::updateStat()
+{
+     totalChars_ += counter_.chars();
 }
 
 
