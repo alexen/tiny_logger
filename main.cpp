@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <algorithm>
+#include <random>
 
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
@@ -24,31 +25,26 @@
 #include <logger/logger.h>
 
 
-#define YES_NO( f ) ((f) ? "yes" : "no")
-
-
 struct RandomChars {
      explicit RandomChars( std::size_t n ) : n{ n } {}
-     const std::size_t n = 0u;
-     std::ostream& generate( std::ostream& os ) const
+     std::ostream& fill( std::ostream& os ) const
      {
-          static constexpr boost::string_view chars =
-               "qwertyuiopfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
-          std::ifstream ifile{ "/dev/urandom", std::ios_base::in | std::ios_base::binary };
+          static constexpr boost::string_view chars = "qwertyuiopfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
+          static std::default_random_engine gen{ static_cast< std::default_random_engine::result_type >( clock() ) };
+          static std::uniform_int_distribution< std::size_t > distr{ 0, chars.size() - 1u };
 
-          std::generate_n(
-               std::ostreambuf_iterator< char >{ os }, n,
-               [ &ifile ]{ return chars[ ifile.get() % chars.size() ]; }
-               );
+          std::generate_n( std::ostreambuf_iterator< char >{ os }, n,
+               []{ return chars[ distr( gen ) ]; } );
 
           return os;
      }
+     const std::size_t n = 0u;
 };
 
 
 std::ostream& operator<<( std::ostream& os, const RandomChars& rc )
 {
-     return rc.generate( os );
+     return rc.fill( os );
 }
 
 
@@ -107,7 +103,7 @@ int main( const int argc, char** argv )
                << " - threads   : " << threads << '\n'
                << " - records   : " << logger.totalRecords() << " (" << (secs ? logger.totalRecords() / secs : 0.) << " records/s)" << '\n'
                << " - bytes     : " << logger.totalChars()
-               << " [" << (logger.totalChars() == (threads * iterations * 100) ? 'v' : 'x') << "] ("
+               << " [" << (logger.totalChars() == (threads * iterations * 100) ? "correct" : "error") << "] ("
                << (secs ? logger.totalChars() / secs : 0.) << " bytes/s)\n";
      }
      catch( const std::exception& e )
